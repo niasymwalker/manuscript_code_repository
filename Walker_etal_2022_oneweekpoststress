@@ -1,0 +1,117 @@
+#Statiscal Code used in the analysis of Walker et al. 2022
+#Titled: "Persistence of phenotypic responses to short-term heat stress in the tabletop coral Acropora hyacinthus"
+#Contact Nia Walker at niawalker13@gmail.com for any further inquiries.
+
+#Packages used in the analysis:
+library(nlme)
+library(lme4)
+library(sjstats)
+
+##################
+#Figure 1 Analysis: Symbiont Density vs. VBS Scores
+##################
+#tukey test for all VBS Scores 1-5, plus random region variable
+
+guavagroups_nlme <- lme(SymProp ~ SacrificedVBSValues, random=~1|ReefRegion,method="ML",data=Dataset)
+guavagroups_anova2 <- anova(lme(SymProp ~ SacrificedVBSValues, random=~1|ReefRegion, method = "ML", data =Dataset))
+summary(glht(guavagroups_nlme, linfct = mcp(SacrificedVBSValues = "Tukey")))
+r2(guavagroups_nlme)
+
+#tukey test for VBS groups: VBS < 3, VBS = 3, VBS > 3
+
+guavaresist_nlme <- lme(SymProp ~ ResistanceGroups, random=~1|ReefRegion,method="ML",data=Dataset)
+guavaresist_anova2 <- anova(lme(SymProp ~ ResistanceGroups, random=~1|ReefRegion, method = "ML", data = Dataset))
+summary(glht(guavaresist_nlme, linfct = mcp(ResistanceGroups = "Tukey")))
+r2(guavaresist_nlme)
+
+##################
+#Figure 2a Analysis: VBS on Day 0 vs. Day 7
+##################
+
+VBSDay0 <- c(1,2,1.5,2,2,2,2,2,2,2,2,2.5,2,2,2.5,2.5,2.5,2.5,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3.5,4,3,4,4,4,4,4,4,4,4,4)
+VBSDay7 <- c(1,1,1.5,2,2,2,2,2,2,2,2,2,2.5,2.5,2.5,2.5,2.5,2.5,2.5,2.5,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3.5,3.5,3.5,4,4,4,4,4,4,4)
+ReefRegion <- c("SL", "NL", "FR", "SL","SL","WSL","WSL","WSL","WSL","NL","NL","WSL","EL","EL","FR","NL","FR","FR","FR","FR","EL","EL","EL","FR","FR","FR","SL","SL","SL","SL","WSL","WSL","NL","NL","NL","NL","NL","NL","SL","NL","EL","NL","NL","EL","FR","FR","NL","NL","NL","NL")
+VBSdataframe <- data.frame(VBS0,VBS7,ReefRegion)
+
+VBS0v7_nlme <- lme(VBSDay7 ~ VBSDay0, random=~1|ReefRegion,method="ML", data=Dataset)
+r2(VBS0v7_nlme)
+##################
+#Figure 2c Analysis: VBS day 0 vs. Mort Day 60
+##################
+#VBS Day 0 vs. Mortality Day 60
+VBSDay_0_Logit <- c(3,4,3,3,3,2,2,3,4,3,2,3,3.5,3,4,3,3,4,3,3,3,4,3,3,2,1,3,2,3,3,3,3,2,4,2,2,3,4,2.5,2,2,3,3,3,4,3,3,2.5,1.5,4,4,2,3,4,4,3,3,4,3,2,4,5,4,2,4,4,4,4,2,3,2.5,3,3,3,5,4,4,3,5,4,5,5,3,3,2.5,2,3,2.5)
+AliveDay_60_Logit <- c(0,1,0,0,1,0,1,0,0,1,0,1,0,0,1,1,1,0,0,0,0,1,1,0,0,0,0,0,0,0,1,1,1,1,0,0,1,1,0,0,0,0,0,1,1,1,1,0,0,0,1,1,0,1,1,0,0,0,1,0,1,1,0,0,0,0,0,0,1,1,0,0,0,1,1,1,1,1,1,0,1,1,0,0,0,1,1,0)
+ReefRegion_Logit <- c("EL","EL","EL","EL","EL","EL","EL","EL","EL","EL","EL","SL","SL","FR","FR","FR","FR","FR","FR","FR","FR","SL","SL","SL","SL","SL","SL","SL","SL","SL","SL","SL","SL","SL","WSL","WSL","WSL","WSL","WSL","WSL","WSL","WSL","WSL","FR","FR","FR","FR","FR","FR","FR","FR","NL","NL","NL","NL","NL","NL","NL","NL","NL","NL","NL","NL","NL","NL","NL","NL","NL","NL","NL","NL","NL","NL","NL","NL","NL","NL","NL","NL","NL","NL","NL","NL","FR","FR","FR","FR","FR")
+
+df_logitVBSMort <- data.frame(VBSDay_0_Logit, AliveDay_60_Logit,ReefRegion_Logit)
+logit_VBSMort60 <- glmer(AliveDay_60_Logit ~ VBSDay_0_Logit + (1|ReefRegion_Logit), data=df_logitVBSMort, family = binomial)
+summary(logit_VBSMort60)
+r2(logit_VBSMort60)
+
+##################
+#Figure S3a and S3b Analysis: VBS day 0 vs. Mortality Day 7, and VBS day 0 vs. Mortality Day 30
+##################
+#logistic regression based on mortality day 7 
+VBSDay_0_Logit <- c(3,4,3,3,3,2,2,3,4,3,2,3,3.5,3,4,3,3,4,3,3,3,4,3,3,2,1,3,2,3,3,3,3,2,4,2,2,3,4,2.5,2,2,3,3,3,4,3,3,2.5,1.5,4,4,2,3,4,4,3,3,4,3,2,4,5,4,2,4,4,4,4,2,3,2.5,3,3,3,5,4,4,3,5,4,5,5,3,3,2.5,2,3,2.5)
+AliveDay_7_Logit <- c(0,1,0,0,1,0,1,0,0,1,0,1,0,0,1,1,1,0,0,0,0,1,1,0,0,0,0,0,0,0,1,1,1,1,0,0,1,1,0,0,0,0,0,1,1,1,1,0,0,0,1,1,0,1,1,0,0,0,1,0,1,1,0,0,0,0,0,0,0,1,0,0,0,1,1,1,1,1,1,0,1,1,0,0,0,1,1,0)
+ReefRegion2_Logit <- c("EL","EL","EL","EL","EL","EL","EL","EL","EL","EL","EL","SL","SL","FR","FR","FR","FR","FR","FR","FR","FR","SL","SL","SL","SL","SL","SL","SL","SL","SL","SL","SL","SL","SL","WSL","WSL","WSL","WSL","WSL","WSL","WSL","WSL","WSL","FR","FR","FR","FR","FR","FR","FR","FR","NL","NL","NL","NL","NL","NL","NL","NL","NL","NL","NL","NL","NL","NL","NL","NL","NL","NL","NL","NL","NL","NL","NL","NL","NL","NL","NL","NL","NL","NL","NL","NL","FR","FR","FR","FR","FR")
+
+Mort7_VBS0 <- data.frame(VBSDay_0_Logit,AliveDay_7_Logit, VBSDay_0_Groups, ReefRegion2_Logit)
+logit_VBSMort7 <- glmer(AliveDay_7_Logit ~ VBSDay_0_Logit + (1|ReefRegion2_Logit), data=Mort7_VBS0, family = binomial)
+summary(logit_VBSMort7)
+r2(logit_VBSMort7)
+
+#logistic regression based on mortality day 30
+VBSDay_0_Logit <- c(3,4,3,3,3,2,2,3,4,3,2,3,3.5,3,4,3,3,4,3,3,3,4,3,3,2,1,3,2,3,3,3,3,2,4,2,2,3,4,2.5,2,2,3,3,3,4,3,3,2.5,1.5,4,4,2,3,4,4,3,3,4,3,2,4,5,4,2,4,4,4,4,2,3,2.5,3,3,3,5,4,4,3,5,4,5,5,3,3,2.5,2,3,2.5)
+AliveDay_30_Logit <- c(0,1,0,0,1,0,1,0,0,1,0,1,0,0,1,1,1,0,0,0,0,1,1,0,0,0,0,0,0,0,1,1,1,1,0,0,1,1,0,0,0,0,0,1,1,1,1,0,0,0,1,1,0,1,1,0,0,0,1,0,1,1,0,0,0,0,0,0,0,1,0,0,0,1,1,1,1,1,1,0,1,1,0,0,0,1,1,0)
+ReefRegion3_Logit <- c("EL","EL","EL","EL","EL","EL","EL","EL","EL","EL","EL","SL","SL","FR","FR","FR","FR","FR","FR","FR","FR","SL","SL","SL","SL","SL","SL","SL","SL","SL","SL","SL","SL","SL","WSL","WSL","WSL","WSL","WSL","WSL","WSL","WSL","WSL","FR","FR","FR","FR","FR","FR","FR","FR","NL","NL","NL","NL","NL","NL","NL","NL","NL","NL","NL","NL","NL","NL","NL","NL","NL","NL","NL","NL","NL","NL","NL","NL","NL","NL","NL","NL","NL","NL","NL","NL","FR","FR","FR","FR","FR")
+
+Mort30_VBS0 <- data.frame(VBSDay_0_Logit,AliveDay_30_Logit, ReefRegion3_Logit)
+logit_VBSMort30 <- glmer(AliveDay_30_Logit ~ VBSDay_0_Logit + (1|ReefRegion3_Logit), data=Mort30_VBS0, family = binomial)
+summary(logit_VBSMort7)
+r2(logit_VBSMort30)
+
+##################
+#Figure 3b Analysis: Bleaching severity across variable reef environments
+##################
+#ordinal logistic regression
+BleachingSeverity_Cats <- c("High", "High", "High", "High", "High", "High", "High", "High", "High", "High", "High", "High", "High", "High", "High", "High", "High", "High", "Moderate", "Moderate", "Moderate", "Moderate", "Moderate", "Moderate", "Moderate", "Moderate", "Moderate", "Moderate", "Moderate", "Moderate", "Moderate", "Moderate", "Moderate", "Moderate", "Moderate", "Moderate", "Moderate", "Moderate", "Moderate", "Moderate", "Moderate", "Moderate", "Moderate", "Moderate", "Moderate", "Moderate", "Low", "Low", "Low", "Low", "Low", "Low", "Low", "Low", "Low", "Low", "Low", "Low", "Low", "Dead","Dead", "Dead","Dead", "Dead","Dead", "Dead","Dead")
+Reef_Temps <- c(1845,1547,2451.666667,907.5,907.5,1425,1412.666667,3101.75,1221,1092.5,1918,495.5,1127.5,1127.5,1933.5,871,871,871,1845,1845,1845,1547,1547,2451.666667,907.5,907.5,907.5,907.5,907.5,907.5,2652.333333,2652.333333,2652.333333,2652.333333,1204,3101.75,2395,2395,1221,1221,1221,495.5,1933.5,871,151.333333,1515,1547,1547,2652.333333,1412.666667,3101.75,3101.75,3101.75,2395,2395,495.5,1526,1526,1515,1425,1204,1221,1221,1221,1092.5,1092.5,1918)
+tempvsbleaching <- data.frame(BleachingSeverity_Cats,Reef_Temps)  
+
+tempbleaching <- polr(BleachingSeverity_Cats ~ Reef_Temps, data=tempvsbleaching, Hess=TRUE)
+ctable <- coef(summary(tempbleaching))
+p <- pnorm(abs(ctable[, "t value"]), lower.tail = FALSE) * 2
+ctable <- cbind(ctable, "p value" = p)
+r2(tempbleaching)
+
+##################
+#Additional Stats
+##################
+#Check Recovery Day 7 Mortality in Epoxy and Egg Crate nubbins
+##HighBleachingGroups
+HighBleaching_EpvEC <- matrix(c(8,20,3,10), nrow=2,ncol=2)
+fisher.test(HighBleaching_EpvEC)
+##ModerateBleachingGroups
+ModBleaching_EpvEC <- matrix(c(15,11,6,6), nrow=2,ncol=2)
+fisher.test(ModBleaching_EpvEC)
+##LowBleachingGroups
+LowBleaching_EpvEC <- matrix(c(13,1,4,4), nrow=2,ncol=2)
+fisher.test(LowBleaching_EpvEC)
+
+#Check Patch Reef vs. Fore Reef Visual Bleaching Scores Recovery Day 0
+enviro_vbs0 <- c("p","p","p","p","p","p","p","p","p","p","p","p","p","f","f","f","f","f","f","f","f","p","p","p","p","p","p","p","p","p","p","p","p","p","p","p","p","p","p","p","p","p","p","f","f","f","f","f","f","f","f","p","p","p","p","p","p","p","p","p","p","p","p","p","p","p","p","p","p","p","p","p","p","p","p","p","p","p","p","p","p","p","p","f","f","f","f","f")
+geo_vbs0_scores <- c(3,4,3,3,3,2,2,3,4,3,2,3,3.5,3,4,3,3,4,3,3,3,4,3,3,2,1,3,2,3,3,3,3,2,4,2,2,3,4,2.5,2,2,3,3,3,4,3,3,2.5,1.5,4,4,2,3,4,4,3,3,4,3,2,4,5,4,2,4,4,4,4,2,3,2.5,3,3,3,5,4,4,3,5,4,5,5,3,3,2.5,2,3,2.5)
+T_test_enviro_0 <- t.test(geo_vbs0_scores ~ enviro_vbs0)
+
+#Check Patch Reef vs. Fore Reef Visual Bleaching Scores Recovery Day 7
+enviro_vbs7 <- c("p","p","p","p","p","p","p","p","f","f","f","f","f","p","p","p","p","p","p","p","p","p","p","p","p","p","p","f","f","f","p","p","p","p","p","p","p","p","p","p","p","p","p","p","p","p","p","f","f","f")
+geo_vbs7_scores <- c(3.5,3,3,2.5,3,4,2.5,3,3,4,3,2.5,3,3,2,1,3,2,3,3,2,2,2,2,2,3,3,2.5,1.5,4,3,3,3,4,2,3.5,1,4,3,4,4,2,2.5,3,3,3.5,3,2.5,2.5,2.5)
+T_test_enviro_7 <- t.test(geo_vbs7_scores ~ enviro_vbs7)
+
+#Check Control vs. Heat stressed samples proportion of VBS 3-5 bleaching (i.e.moderate and severe) on Post-Stress Day 0
+heatvscontrol_bleaching <- matrix(c(66,22,5,96), nrow=2,ncol=2)
+chisq.test(heatvscontrol_bleaching)
+#Check Control vs. Heat stressed samples proportion of Mortality Post-Stress Day 7
+heatvscontrol_mortality <- matrix(c(50,51,88,12), nrow=2,ncol=2)
+chisq.test(heatvscontrol_bleaching)
